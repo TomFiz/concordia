@@ -166,11 +166,12 @@ class ObservationTrust(action_spec_ignored.ActionSpecIgnored):
           ' act for his own interest.'
       )
 
-    return (
-        f'{self._agent_name} can trust the following persons :'
-        f' {trusted_agents}. {self._agent_name} must be willing to cooperate'
-        ' with them to reach a bigger collective objective.'
-    )
+    else:
+      return (
+          f'{self._agent_name} can trust the following persons : '
+          f' {trusted_agents}.{self._agent_name} must be willing to cooperate'
+          ' with them to reach a bigger collective objective.'
+      )
 
   def _update_circle(self, observations: str):
     """Check cooperation with the trustee circle and update trust for each agent involved."""
@@ -321,7 +322,8 @@ class QuestionAction(question_of_recent_memories.QuestionOfRecentMemories):
       **kwargs,
   ):
     question = (  # @param {"type":"string"}
-        'What would a person like {agent_name} do in a situation like this ?'
+        'Knowing the above, what would a person like {agent_name} do in a'
+        ' situation like this ?'
     )
     answer_prefix = '{agent_name} would '  # @param {"type":"string"}
     add_to_memory = True  # @param {"type":"boolean"}
@@ -337,13 +339,13 @@ class QuestionAction(question_of_recent_memories.QuestionOfRecentMemories):
         memory_tag=memory_tag,
         components={
             'QuestionIdentity': (
-                '\nQuestion: What kind of person is {agent_name}?\nAnswer'
+                f'\nQuestion: What kind of person is {agent_name}?\nAnswer'
             ),
             'QuestionSituation': (
-                '\nQuestion: What kind of situation is {agent_name} in right'
+                f'\nQuestion: What kind of situation is {agent_name} in right'
                 ' now?\nAnswer'
             ),
-            'ObservationTrust': '\n{DEFAULT_OBSERVATION_TRUSTEES_PRE_ACT_KEY}',
+            'ObservationTrust': f'\n{DEFAULT_OBSERVATION_TRUSTEES_PRE_ACT_KEY}',
         },  # @param
         **kwargs,
     )
