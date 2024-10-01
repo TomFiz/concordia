@@ -117,13 +117,14 @@ class Gemma2(language_model.LanguageModel):
         time.sleep(_SECONDS_TO_SLEEP_WHEN_RATE_LIMITED)
       try:
         response = self._client.chat.completions.create(
-            model=self._model_name,
+            model='meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo',
             messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            timeout=timeout,
-            stop=terminators,
-            seed=seed,
+            max_tokens=512,
+            temperature=0.7,
+            top_p=0.7,
+            top_k=50,
+            repetition_penalty=1,
+            stop=['<|eot_id|>', '<|eom_id|>'],
         )
       except together.error.RateLimitError as err:
         if attempts >= _NUM_SILENT_ATTEMPTS:

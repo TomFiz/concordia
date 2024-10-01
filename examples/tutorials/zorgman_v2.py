@@ -1,6 +1,5 @@
 # @title Imports for agent building
 import datetime
-import json
 import numpy as np  # For calculating average and std deviation
 import statistics
 from typing import List, Dict, Sequence, Tuple, Union, Callable
@@ -13,7 +12,7 @@ from concordia.clocks import game_clock
 from concordia.components import agent as agent_components
 from concordia.typing import entity_component
 from concordia.components.agent import action_spec_ignored
-from concordia.typing import entity as entity_lib
+# from concordia.typing import entity as entity_lib
 from concordia.language_model import language_model
 from concordia.memory_bank import legacy_associative_memory
 from concordia.utils import measurements as measurements_lib
@@ -48,10 +47,10 @@ class TrusteeCircle:
       self.trusted_agents_scores[ext_agent_name] = []
 
     self.trusted_agents_scores[ext_agent_name].append(cooperation_score)
-    print(
-        f"Agent '{ext_agent_name}' updated with cooperation score"
-        f' {cooperation_score}.'
-    )
+    # print(
+    #     f"Agent '{ext_agent_name}' updated with cooperation score"
+    #     f' {cooperation_score}.'
+    # )
 
   def calculate_agent_stats(self, ext_agent_name: str) -> Tuple[int, float]:
     """Calculate the average and std deviation of cooperation scores for a specific agent."""
@@ -88,7 +87,7 @@ class TrusteeCircle:
     return self.trusted_agents_scores.copy()
 
 
-DEFAULT_OBSERVATION_TRUSTEES_PRE_ACT_KEY = 'Circle of Trustees'
+DEFAULT_OBSERVATION_TRUSTEES_PRE_ACT_KEY = 'Collaboration and strategy'
 
 
 class ObservationTrust(action_spec_ignored.ActionSpecIgnored):
@@ -162,15 +161,17 @@ class ObservationTrust(action_spec_ignored.ActionSpecIgnored):
     trusted_agents = ', '.join(self._trustee_circle.get_trusted_agents())
     if trusted_agents == '':
       return (
-          f'{self._agent_name} cannot trust anyone at the moment, and should'
-          ' act for his own interest.'
+          f'{self._agent_name} cannot trust anyone at the moment, and will'
+          ' choose the action that will most quickly and most surely acheive'
+          ' their goal.'
       )
 
     else:
       return (
-          f'{self._agent_name} can trust the following persons : '
-          f' {trusted_agents}.{self._agent_name} must be willing to cooperate'
-          ' with them to reach a bigger collective objective.'
+          f'{self._agent_name} trusts fully the following persons : '
+          f'{trusted_agents}. {self._agent_name} is fully willing to cooperate'
+          ' with them to reach a bigger collective objective, while trying to '
+          'reach their own personal goal.'
       )
 
   def _update_circle(self, observations: str):
@@ -192,20 +193,20 @@ class ObservationTrust(action_spec_ignored.ActionSpecIgnored):
           ' (factual statement demonstrating no choice from the indivual for'
           ' example), you will return 3.Provide a dictionary whith each agent,'
           ' strictly following this format, without justification:'
-          f" {{agent_name: int}}.Here is the interaction : '{observations}'."
+          f" {{'agent_name': int}}.Here is the interaction : '{observations}'."
       )
 
       response = model.sample_text(prompt=prompt, temperature=0.0)
+      # print(f'Trust LLM response : \n {response}  \n')
 
       try:
-        res_dict = json.loads(
-            response
-        )  # Convert the model response to a dictionary
+        res_dict = eval(response)  # Convert the model response to a dictionary
         if isinstance(res_dict, dict):
+          # print(f'Cooperation score calculation : {res_dict}  \n')
           return res_dict  # Return a dictionary of agent names and their respective cooperation scores
         else:
           return {}
-      except (json.JSONDecodeError, TypeError):
+      except (SyntaxError, TypeError):
         return {}
 
     def store_interaction_memory(
@@ -245,7 +246,7 @@ class ObservationTrust(action_spec_ignored.ActionSpecIgnored):
 ### ~~~~ QUESTIONS ~~~~ ###
 
 
-class QuestionIdentity(question_of_recent_memories.QuestionOfRecentMemories):
+class Question1Identity(question_of_recent_memories.QuestionOfRecentMemories):
   """This component answers the question 'what kind of person is the agent?'."""
 
   def __init__(
@@ -278,7 +279,7 @@ class QuestionIdentity(question_of_recent_memories.QuestionOfRecentMemories):
 
 
 # @markdown We can add the value of other components to the context of the question. Notice, how QuestionSituation depends on Observation and ObservationSummary. The names of the classes of the contextualising components have to be passed as "components" argument.
-class QuestionSituation(question_of_recent_memories.QuestionOfRecentMemories):
+class Question2Situation(question_of_recent_memories.QuestionOfRecentMemories):
   """This component answers 'which situation is the agent in at this moment ?'."""
 
   def __init__(
@@ -312,7 +313,7 @@ class QuestionSituation(question_of_recent_memories.QuestionOfRecentMemories):
     )
 
 
-class QuestionAction(question_of_recent_memories.QuestionOfRecentMemories):
+class Question3Action(question_of_recent_memories.QuestionOfRecentMemories):
   """What would a person like the agent do in a situation like this?"""
 
   def __init__(
@@ -338,10 +339,10 @@ class QuestionAction(question_of_recent_memories.QuestionOfRecentMemories):
         add_to_memory=add_to_memory,
         memory_tag=memory_tag,
         components={
-            'QuestionIdentity': (
+            'Question1Identity': (
                 f'\nQuestion: What kind of person is {agent_name}?\nAnswer'
             ),
-            'QuestionSituation': (
+            'Question2Situation': (
                 f'\nQuestion: What kind of situation is {agent_name} in right'
                 ' now?\nAnswer'
             ),
@@ -358,18 +359,18 @@ def _make_trustee_question_components(
     clock: game_clock.MultiIntervalClock,
 ) -> Sequence[question_of_recent_memories.QuestionOfRecentMemories]:
 
-  question_1 = QuestionIdentity(
+  question_1 = Question1Identity(
       agent_name=agent_name,
       model=model,
       logging_channel=measurements.get_channel('Question_1').on_next,
   )
-  question_2 = QuestionSituation(
+  question_2 = Question2Situation(
       agent_name=agent_name,
       model=model,
       clock_now=clock.now,
       logging_channel=measurements.get_channel('Question_2').on_next,
   )
-  question_3 = QuestionAction(
+  question_3 = Question3Action(
       agent_name=agent_name,
       model=model,
       clock_now=clock.now,
@@ -379,32 +380,32 @@ def _make_trustee_question_components(
   return (question_1, question_2, question_3)
 
 
-class CustomConcatActComponent(
-    agent_components.concat_act_component.ConcatActComponent
-):
-  """Custom act component that adds a custom question to the context."""
+# class CustomConcatActComponent(
+#     agent_components.concat_act_component.ConcatActComponent
+# ):
+#   """Custom act component that adds a custom question to the context."""
 
-  def __init__(self, *args, trustee_circle, agent_name, model, **kwargs):
-    super().__init__(model=model, *args, **kwargs)
-    self.trustee_circle = trustee_circle
-    self.agent_name = agent_name
-    self.model = model
+#   def __init__(self, *args, trustee_circle, agent_name, model, **kwargs):
+#     super().__init__(model=model, *args, **kwargs)
+#     self.trustee_circle = trustee_circle
+#     self.agent_name = agent_name
+#     self.model = model
 
-  def get_action_attempt(
-      self,
-      contexts: entity_component.ComponentContextMapping,
-      action_spec: entity_lib.ActionSpec,
-  ) -> str:
+#   def get_action_attempt(
+#       self,
+#       contexts: entity_component.ComponentContextMapping,
+#       action_spec: entity_lib.ActionSpec,
+#   ) -> str:
 
-    # Answer Question 1
-    answer_1 = contexts['QuestionIdentity']
-    # Answer Question 2
-    answer_2 = contexts['QuestionSituation']
+#     # Answer Question 1
+#     answer_1 = contexts['QuestionIdentity']
+#     # Answer Question 2
+#     answer_2 = contexts['QuestionSituation']
 
-    # Answer QuestionAction
-    answer_action_trust = contexts['QuestionAction']
+#     # Answer QuestionAction
+#     answer_action_trust = contexts['QuestionAction']
 
-    return super().get_action_attempt(contexts, action_spec)
+#     return super().get_action_attempt(contexts, action_spec)
 
 
 def build_agent(
@@ -415,11 +416,31 @@ def build_agent(
     update_time_interval: datetime.timedelta,
 ) -> entity_agent_with_logging.EntityAgentWithLogging:
 
+  """Build an agent.
+
+  Args:
+    config: The agent config to use.
+    model: The language model to use.
+    memory: The agent's memory object.
+    clock: The clock to use.
+    update_time_interval: Agent calls update every time this interval passes.
+
+  Returns:
+    An agent.
+  """
+
+  del update_time_interval
+  if not config.extras.get('main_character', False):
+    raise ValueError(
+        'This function is meant for a main character '
+        'but it was called on a supporting character.'
+    )
   agent_name = config.name
   trustee_circle = TrusteeCircle()
-  raw_memory = legacy_associative_memory.AssociativeMemoryBank(memory)
-  measurements = measurements_lib.Measurements()
 
+  raw_memory = legacy_associative_memory.AssociativeMemoryBank(memory)
+
+  measurements = measurements_lib.Measurements()
   instructions = agent_components.instructions.Instructions(
       agent_name=agent_name,
       logging_channel=measurements.get_channel('Instructions').on_next,
@@ -431,10 +452,11 @@ def build_agent(
       logging_channel=measurements.get_channel('TimeDisplay').on_next,
   )
 
+  observation_label = 'Observation'
   observation = agent_components.observation.Observation(
       clock_now=clock.now,
       timeframe=clock.get_step_size(),
-      pre_act_key='\nObservation',
+      pre_act_key=observation_label,
       logging_channel=measurements.get_channel('Observation').on_next,
   )
 
@@ -448,7 +470,7 @@ def build_agent(
       logging_channel=measurements.get_channel('ObservationSummary').on_next,
   )
 
-  relevant_memories_label = '\nRecalled memories and observations'
+  relevant_memories_label = 'Recalled memories and observations'
   relevant_memories = agent_components.all_similar_memories.AllSimilarMemories(
       model=model,
       components={
@@ -460,7 +482,7 @@ def build_agent(
       logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
   )
 
-  trustee_circle_label = 'Trustee Circle'
+  trustee_circle_label = 'Collaboration and strategy'
   trustee_circle = ObservationTrust(
       agent_name=agent_name,
       model=model,
@@ -469,6 +491,17 @@ def build_agent(
       pre_act_key=trustee_circle_label,
       logging_channel=measurements.get_channel('TrusteeCircle').on_next,
   )
+
+  if config.goal:
+    goal_label = 'Overarching goal'
+    overarching_goal = agent_components.constant.Constant(
+        state=config.goal,
+        pre_act_key=goal_label,
+        logging_channel=measurements.get_channel(goal_label).on_next,
+    )
+  else:
+    goal_label = None
+    overarching_goal = None
 
   question_components = _make_trustee_question_components(
       agent_name=agent_name,
@@ -483,24 +516,32 @@ def build_agent(
       observation,
       observation_summary,
       relevant_memories,
-      trustee_circle,
   )
-  entity_components = core_components + tuple(question_components)
+
+  entity_components = (
+      core_components + tuple(question_components) + (trustee_circle,)
+  )
   components_of_agent = {
       _get_class_name(component): component for component in entity_components
   }
+
   components_of_agent[
       agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME
   ] = agent_components.memory_component.MemoryComponent(raw_memory)
   component_order = list(components_of_agent.keys())
 
-  act_component = CustomConcatActComponent(
-      agent_name=agent_name,
+  if overarching_goal is not None:
+    components_of_agent[goal_label] = overarching_goal
+    # Place goal after the instructions.
+    component_order.insert(1, goal_label)
+
+  print(component_order)
+
+  act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,
       clock=clock,
       component_order=component_order,
       logging_channel=measurements.get_channel('ActComponent').on_next,
-      trustee_circle=trustee_circle,
   )
 
   agent = entity_agent_with_logging.EntityAgentWithLogging(
