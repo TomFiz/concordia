@@ -113,7 +113,13 @@ class QuestionOfRecentMemories(action_spec_ignored.ActionSpecIgnored):
     ])
     prompt.statement(component_states)
 
+    print(
+        '\n--------- ASKING A QUESTION --------- \nContext given to LLM :'
+        f' \n{prompt.view().text()} \n'
+    )
+
     question = self._question.format(agent_name=agent_name)
+    print(f'Question asked : {question} \n')
     result = prompt.open_question(
         question,
         answer_prefix=self._answer_prefix.format(agent_name=agent_name),
@@ -121,6 +127,7 @@ class QuestionOfRecentMemories(action_spec_ignored.ActionSpecIgnored):
         terminators=self._terminators,
     )
     result = self._answer_prefix.format(agent_name=agent_name) + result
+    print(f'Answer given : {result} \n')
 
     if self._add_to_memory:
       memory.add(f'{self._memory_tag} {result}', metadata={})
