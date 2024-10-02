@@ -2,7 +2,7 @@
 import datetime
 import numpy as np  # For calculating average and std deviation
 import statistics
-from typing import List, Dict, Sequence, Tuple, Union, Callable
+from typing import List, Dict, Tuple, Union, Callable
 
 from concordia.agents import entity_agent_with_logging
 from concordia.associative_memory import associative_memory
