@@ -192,7 +192,7 @@ class ObservationTrust(action_spec_ignored.ActionSpecIgnored):
           ' selfishly, and reluctant to making concessions.If the discussion'
           " contains no indication as of the agent's will to collaborate"
           ' (factual statement demonstrating no choice from the indivual for'
-          ' example), you will return 3.Provide a dictionary whith each agent,'
+          ' example), you will return 3.Provide a string,'
           ' strictly following this format, without justification:'
           f" {{'agent_name': int}}.Here is the interaction : '{observations}'."
       )
