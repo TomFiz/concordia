@@ -12,27 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A Concordia Environment Configuration."""
+"""Settings for a circa 2015 British reality show of a 4 player chicken game.
+"""
 
-from examples.modular.environment import pub_coordination
+from examples.modular.environment.modules import circa_2015_british_reality_show as parent_module
 
 
-class Simulation(pub_coordination.Simulation):
-  """Simulation with pub closures."""
-
-  def __init__(
-      self,
-      **kwargs,
-  ):
-    """Initialize the simulation object.
-
-    The launch script assumes this API object has a run() method.
-
-    Args:
-      **kwargs: arguments to pass to the base class.
-    """
-
-    super().__init__(
-        pub_closed_probability=0.7,
-        **kwargs,
-    )
+def sample_parameters(seed: int | None = None):
+  """Sample parameters of the setting and the backstory for each player."""
+  return parent_module.sample_parameters(
+      minigame_name='chicken',
+      num_players=4,
+      seed=seed,
+  )

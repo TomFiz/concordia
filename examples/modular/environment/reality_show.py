@@ -54,13 +54,14 @@ SchellingDiagram = gm_components.schelling_diagram_payoffs.SchellingDiagram
 SchellingPayoffs = gm_components.schelling_diagram_payoffs.SchellingPayoffs
 
 DEFAULT_TIME_AND_PLACE_MODULES = (
-    'circa_2015_british_reality_show',
-    'early_2000s_american_reality_show__chicken_3_players',
-    'early_2000s_american_reality_show__chicken_4_players',
-    'early_2000s_american_reality_show__prisoners_dilemma_3_players',
-    'early_2000s_american_reality_show__prisoners_dilemma_4_players',
-    'early_2000s_american_reality_show__stag_hunt_3_players',
-    'early_2000s_american_reality_show__stag_hunt_4_players',
+    'circa_2015_british_reality_show__chicken_3_players',
+    'circa_2015_british_reality_show__prisoners_dilemma_3_players',
+    'circa_2003_american_reality_show__chicken_3_players',
+    'circa_2003_american_reality_show__chicken_4_players',
+    'circa_2003_american_reality_show__prisoners_dilemma_3_players',
+    'circa_2003_american_reality_show__prisoners_dilemma_4_players',
+    'circa_2003_american_reality_show__stag_hunt_3_players',
+    'circa_2003_american_reality_show__stag_hunt_4_players',
 )
 
 MAJOR_TIME_STEP = datetime.timedelta(minutes=10)
@@ -207,14 +208,17 @@ class WorldConfig:
   month: int
   day: int
   num_players: int
+  num_additional_minigame_scenes: int
   contestants: Mapping[str, Mapping[str, Any]]
   num_minigame_reps_per_scene: tuple[int, ...]
+  num_minigame_reps_per_extra_scene: tuple[int, ...]
+  seed: int
 
 
-def get_random_show_with_description() -> tuple[str, str]:
+def get_random_show_with_description(rng: random.Random) -> tuple[str, str]:
   """Randomly sample a show title and description from a prewritten list."""
-  title = np.random.choice(CANDIDATE_SHOW_TITLES)
-  description = np.random.choice(CANDIDATE_SHOW_DESCRIPTIONS)
+  title = rng.choice(CANDIDATE_SHOW_TITLES)
+  description = rng.choice(CANDIDATE_SHOW_DESCRIPTIONS)
   return f'"{title}" is a reality TV show described as: "{description}"', title
 
 
@@ -230,9 +234,10 @@ def _get_all_contestant_names_string(contestant_names: Sequence[str]):
 def get_shared_memories_and_context(
     model: language_model.LanguageModel,
     contestant_names: Sequence[str],
+    rng: random.Random,
 ) -> tuple[Sequence[str], str, str]:
   """Return the shared memories and context for all agents and game master."""
-  show_title_and_description, show_title = get_random_show_with_description()
+  show_title_and_description, show_title = get_random_show_with_description(rng)
   all_contestants_string = _get_all_contestant_names_string(contestant_names)
 
   shared_memories = [
@@ -261,6 +266,7 @@ def configure_players(
     model: language_model.LanguageModel,
     show_title: str,
     sampled_settings: Any,
+    rng: random.Random,
 ) -> tuple[
     list[formative_memories.AgentConfig], list[formative_memories.AgentConfig]
 ]:
@@ -271,6 +277,7 @@ def configure_players(
     show_title: the name of the reality show.
     sampled_settings: the environment configuration containing the time and
       place details.
+      rng: the random number generator to use.
 
   Returns:
     main_player_configs: configs for the main characters
@@ -278,9 +285,9 @@ def configure_players(
   """
 
   def get_agent_config(player_name: str, sampled_settings: Any):
-    birth_year = sampled_settings.year - (25 + random.randint(-3, 3))
-    birth_month = random.randint(1, 12)
-    birth_day = random.randint(1, 28)
+    birth_year = sampled_settings.year - (25 + rng.randint(-3, 3))
+    birth_month = rng.randint(1, 12)
+    birth_day = rng.randint(1, 28)
     traits_str = sampled_settings.contestants[player_name]['traits']
     catchphrase = sampled_settings.contestants[player_name]['catchphrase']
     subject_pronoun = sampled_settings.contestants[player_name][
@@ -586,15 +593,37 @@ def configure_scenes(
           participant_configs=player_configs,
           num_rounds=sampled_settings.num_minigame_reps_per_scene[1],
       ),
+  ]
+
+  for i in range(sampled_settings.num_additional_minigame_scenes):
+    scenes.append(
+        scene_lib.SceneSpec(
+            scene_type=scene_specs['conversation'],
+            start_time=start_time + len(scenes) * datetime.timedelta(hours=2),
+            participant_configs=player_configs,
+            num_rounds=1,
+        )
+    )
+    scenes.append(
+        scene_lib.SceneSpec(
+            scene_type=scene_specs[DECISION_SCENE_TYPE],
+            start_time=start_time + len(scenes) * datetime.timedelta(hours=2),
+            participant_configs=player_configs,
+            num_rounds=sampled_settings.num_minigame_reps_per_extra_scene[i],
+        )
+    )
+
+  scenes.append(
       # The purpose of the debrief scene is to make it so the players receive
       # the observation containing their scores after the last minigame.
       scene_lib.SceneSpec(
           scene_type=scene_specs[DEBRIEF_SCENE_TYPE],
-          start_time=start_time + 4 * datetime.timedelta(hours=2),
+          start_time=start_time + len(scenes) * datetime.timedelta(hours=2),
           participant_configs=player_configs,
           num_rounds=1,
-      ),
-  ]
+      )
+  )
+
   return (
       scenes,
       scene_specs[DECISION_SCENE_TYPE].override_game_master,
@@ -652,6 +681,7 @@ class Simulation(scenarios_lib.RunnableSimulationWithMemories):
       resident_visitor_modules: Sequence[types.ModuleType] | None = None,
       supporting_agent_module: types.ModuleType | None = None,
       time_and_place_module: str | None = None,
+      seed: int | None = None,
   ):
     """Initialize the simulation object.
 
@@ -675,6 +705,7 @@ class Simulation(scenarios_lib.RunnableSimulationWithMemories):
       time_and_place_module: optionally, specify a module containing settings
         that create a sense of setting in a specific time and place. If not
         specified, a random module will be chosen from the default options.
+        seed: the random seed to use.
     """
     # No need for supprting agents in this environment.
     del supporting_agent_module
@@ -701,7 +732,9 @@ class Simulation(scenarios_lib.RunnableSimulationWithMemories):
     _, sampled_settings = helper_functions.load_time_and_place_module(
         time_and_place_module=time_and_place_module,
         default_time_and_place_modules=DEFAULT_TIME_AND_PLACE_MODULES,
+        seed=seed,
     )
+    self._rng = random.Random(sampled_settings.seed)
     contestant_names = list(sampled_settings.contestants.keys())
 
     start_time = datetime.datetime(
@@ -723,7 +756,7 @@ class Simulation(scenarios_lib.RunnableSimulationWithMemories):
         clock_now=self._clock.now,
     )
     shared_memories, shared_context, show_title = (
-        get_shared_memories_and_context(model, contestant_names)
+        get_shared_memories_and_context(model, contestant_names, rng=self._rng)
     )
     self._formative_memory_factory = formative_memories.FormativeMemoryFactory(
         model=self._model,
@@ -735,8 +768,9 @@ class Simulation(scenarios_lib.RunnableSimulationWithMemories):
         model=model,
         show_title=show_title,
         sampled_settings=sampled_settings,
+        rng=self._rng,
     )
-    random.shuffle(main_player_configs)
+    self._rng.shuffle(main_player_configs)
 
     tasks = {
         config.name: functools.partial(

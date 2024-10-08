@@ -127,6 +127,11 @@ SUBSTRATE_CONFIGS: Mapping[str, SubstrateConfig] = immutabledict.immutabledict(
         environment='haggling',
         supporting_agent_module='basic_puppet_agent',
     ),
+    haggling_multi_item=SubstrateConfig(
+        description='haggling over a price with multiple items',
+        environment='haggling_multi_item',
+        supporting_agent_module='basic_puppet_agent',
+    ),
     haggling_gullible=SubstrateConfig(
         description='haggling over a price',
         environment='haggling_gullible',
@@ -251,6 +256,17 @@ SCENARIO_CONFIGS: Mapping[str, ScenarioConfig] = immutabledict.immutabledict(
         focal_is_resident=False,
         tags=('negotiation',),
     ),
+    haggling_multi_item_0=ScenarioConfig(
+        description=(
+            'resident population of focal agents in a haggling scenario with no'
+            ' supporting agents and rational residents'
+        ),
+        substrate_config=SUBSTRATE_CONFIGS['haggling_multi_item'],
+        background_agent_module='rational_agent',
+        time_and_place_module='fruitville_haggling_multi_fruit',
+        focal_is_resident=True,
+        tags=('negotiation', 'hidden information'),
+    ),
     reality_show_circa_2003_prisoners_dilemma_0=ScenarioConfig(
         description=(
             'resident population of focal agents are contestants on a '
@@ -261,7 +277,7 @@ SCENARIO_CONFIGS: Mapping[str, ScenarioConfig] = immutabledict.immutabledict(
         substrate_config=SUBSTRATE_CONFIGS['reality_show'],
         background_agent_module='basic_agent',
         time_and_place_module=(
-            'early_2000s_american_reality_show__prisoners_dilemma_3_players'
+            'circa_2003_american_reality_show__prisoners_dilemma_3_players'
         ),
         focal_is_resident=True,
         tags=(
@@ -278,7 +294,7 @@ SCENARIO_CONFIGS: Mapping[str, ScenarioConfig] = immutabledict.immutabledict(
         substrate_config=SUBSTRATE_CONFIGS['reality_show'],
         background_agent_module='paranoid_agent',
         time_and_place_module=(
-            'early_2000s_american_reality_show__stag_hunt_4_players'
+            'circa_2003_american_reality_show__stag_hunt_4_players'
         ),
         focal_is_resident=False,
         tags=(
@@ -300,6 +316,7 @@ def build_simulation(
     agent_base_module: str = DEFAULT_IMPORT_AGENT_BASE_MODULE,
     support_agent_base_module: str = DEFAULT_IMPORT_SUPPORT_AGENT_MODULE,
     env_base_module: str = DEFAULT_IMPORT_ENV_BASE_MODULE,
+    seed: int | None = None,
 ) -> RunnableSimulationWithMemories:
   """Builds a simulation from a scenario configuration."""
   substrate_config = scenario_config.substrate_config
@@ -342,5 +359,6 @@ def build_simulation(
       resident_visitor_modules=(resident_agent_module, visitor_agent_module),
       supporting_agent_module=supporting_agent_module,
       time_and_place_module=scenario_config.time_and_place_module,
+      seed=seed,
   )
   return runnable_simulation

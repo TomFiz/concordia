@@ -119,12 +119,21 @@ class Gemma2(language_model.LanguageModel):
         response = self._client.chat.completions.create(
             model='meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo',
             messages=messages,
+<<<<<<< HEAD
             max_tokens=512,
             temperature=0.7,
             top_p=0.7,
             top_k=50,
             repetition_penalty=1,
             stop=['<|eot_id|>', '<|eom_id|>'],
+=======
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            stop=terminators,
+            seed=seed,
+            stream=False,
+>>>>>>> 122b606a0f30330d6ebdced9f4e643c0dc4143c8
         )
       except together.error.RateLimitError as err:
         if attempts >= _NUM_SILENT_ATTEMPTS:
@@ -196,6 +205,7 @@ class Gemma2(language_model.LanguageModel):
               messages=messages,
               seed=seed,
               logprobs=1,
+              stream=False,
           )
         except together.error.RateLimitError as err:
           if attempts >= _NUM_SILENT_ATTEMPTS:
