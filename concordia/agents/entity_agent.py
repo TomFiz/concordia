@@ -104,9 +104,11 @@ class EntityAgent(entity_component.EntityWithComponents):
       *,
       type_: type[entity_component.ComponentT] = entity_component.BaseComponent,
   ) -> entity_component.ComponentT:
-    print(name)
-    print(self._context_components)
-    component = self._context_components[name]
+    try:
+      component = self._context_components[name]
+    except KeyError:
+      print(f'Component "{name}" not found in {self._context_components}')
+
     return cast(entity_component.ComponentT, component)
 
   def _parallel_call_(

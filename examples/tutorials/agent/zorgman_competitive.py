@@ -306,7 +306,6 @@ def build_agent(
 
   components_of_agent[strategy_label] = strategy
   component_order.insert(2, strategy_label)
-  print(component_order)
 
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,

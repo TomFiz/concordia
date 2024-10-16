@@ -535,8 +535,6 @@ def build_agent(
     # Place goal after the instructions.
     component_order.insert(1, goal_label)
 
-  print(component_order)
-
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,
       clock=clock,
