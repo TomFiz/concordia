@@ -66,6 +66,13 @@ script and computes the Elo ratings for all agents that were been tested with
 the same model and embedder.
 """
 
+import sys
+
+project_root = "C:/Users/TomFi/Desktop/Cours/Concordia"
+# Add root to python path.
+if project_root not in sys.path:
+  sys.path.append(project_root)
+
 import argparse
 import datetime
 import functools
@@ -184,7 +191,7 @@ else:
   embedder = lambda x: np.ones(5)
 
 # Create evaluation results directory
-start_time = datetime.datetime.now().strftime('%Y-%m-%d__%H:%M:%S')
+start_time = datetime.datetime.now().strftime('%Y-%m-%d__%H-%M-%S')
 results_dir = f'evaluations/evaluation__{args.agent_name}__{start_time}'
 os.makedirs(results_dir, exist_ok=True)
 
