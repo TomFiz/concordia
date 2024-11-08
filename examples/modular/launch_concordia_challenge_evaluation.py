@@ -100,17 +100,17 @@ parser.add_argument(
     default='rational_agent',
     dest='agent_name',
 )
+# parser.add_argument(
+#     '--api_type', action='store', default='mistral', dest='api_type'
+# )
+# parser.add_argument(
+#     '--device',
+#     action='store',
+#     default=None,
+#     dest='device',
+# )
 parser.add_argument(
-    '--api_type', action='store', default='mistral', dest='api_type'
-)
-parser.add_argument(
-    '--device',
-    action='store',
-    default=None,
-    dest='device',
-)
-parser.add_argument(
-    '--model', action='store', default='codestral-latest', dest='model_name'
+    '--model', action='store', default='gemma-9b', dest='model_name'
 )
 parser.add_argument(
     '--embedder',
@@ -172,14 +172,35 @@ agent_module = importlib.import_module(
     f'{IMPORT_AGENT_BASE_DIR}.{args.agent_name}'
 )
 
-# Language Model setup
-model = utils.language_model_setup(
-    api_type=args.api_type,
-    model_name=args.model_name,
-    api_key=args.api_key,
-    device=args.device,
-    disable_language_model=args.disable_language_model,
-)
+# # Language Model setup
+# model = utils.language_model_setup(
+#     api_type=args.api_type,
+#     model_name=args.model_name,
+#     api_key=args.api_key,
+#     device=args.device,
+#     disable_language_model=args.disable_language_model,
+# )
+
+from google.auth import default
+from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import aiplatform
+
+try:
+    credentials, project = default()
+except DefaultCredentialsError as e:
+    print(f"Error: {e}")
+    print("Please set up Application Default Credentials as described in the documentation.")
+    raise
+
+from concordia.language_model import google_cloud_custom_model
+
+endpoint_id = '7512339529500459008' #@param {type: 'string'}
+project_id = '1085311675177' #@param {type: 'string'}
+region = 'us-central1' #@param {type: 'string'}
+
+model = google_cloud_custom_model.VertexAI(endpoint_id=endpoint_id,
+      project_id=project_id,
+      location=region)
 
 # Setup sentence encoder
 if not args.disable_language_model:

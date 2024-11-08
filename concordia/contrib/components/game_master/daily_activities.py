@@ -96,7 +96,7 @@ class DailyActivities(component.Component):
       name: str = 'DailyActivities',
       verbose: bool = False,
   ):
-    """Initialize a grounded inventory component tracking objects in python.
+    """Initialize a grounded activities component tracking objects in python.
 
     Args:
       model: a language model
@@ -104,13 +104,13 @@ class DailyActivities(component.Component):
       activity_configs: sequence of activity configurations
       resolution_scene: on which scene type should this component be updated
         after the event, i.e. when to check the joint action and compute results
-      players: sequence of players who have an inventory and will observe it.
+      players: sequence of players who have an activities and will observe it.
       player_initial_activity_distribution: dict mapping player name to a
         dictionary with activities as keys and initial daily time as values.
       clock_now: Function to call to get current time.
       num_to_retrieve: number of recent memories to retrieve for context.
       chain_of_thought_prefix: include this string in context before all
-        reasoning steps for handling the inventory.
+        reasoning steps for handling the activities.
       basic_setting: a string to include in the context before all reasoning
       name: the name of this component e.g. Possessions, Account, Property, etc
       verbose: whether to print the full update chain of thought or not
@@ -171,14 +171,6 @@ class DailyActivities(component.Component):
         self._activities[player_name]
     )
 
-  def _send_message_to_player_and_game_master(
-      self, player_name: str, message: str
-  ) -> None:
-    """Send `message` to player `player_name`."""
-    player = self._names_to_players[player_name]
-    player.observe(message)
-    self._memory.add(message)
-
   def state(self) -> str:
     return self._state
 
@@ -196,15 +188,6 @@ class DailyActivities(component.Component):
           name: self._get_player_daily_activities_str(name)
           for name in self._player_names
       }
-      # Explicitly pass partial states to agents here in `update` instead of
-      # relying on the game master to call partial state on all players. This is
-      # because we frequently have supporting characters who participate in
-      # conversations but do not take active turns with the top-level game
-      # master themselves. This method of passing the partial state information
-      # ensures that theses players still get to observe their activities.
-      for player_name in self._player_names:
-        self._names_to_players[player_name].observe(
-            self._partial_states[player_name])
 
   def update_before_event(self, player_action_attempt: str) -> None:
     # we assume that the player action attempt is in the format
@@ -347,7 +330,7 @@ class Payoffs(component.Component):
     Args:
       memory: an associative memory
       daily_activities: the component to use to get the activities of players.
-      players: sequence of players who have an inventory and will observe it.
+      players: sequence of players who have daily activities.
       clock_now: Function to call to get current time.
       player_score_fn: function to compute an individual's score
         the value returned by this function is added to the score of the
@@ -383,14 +366,6 @@ class Payoffs(component.Component):
   def name(self) -> str:
     """Returns the name of this component."""
     return self._name
-
-  def _send_message_to_player_and_game_master(
-      self, player_name: str, message: str
-  ) -> None:
-    """Send `message` to player `player_name`."""
-    player = self._names_to_players[player_name]
-    player.observe(message)
-    self._memory.add(message)
 
   def state(self) -> str:
     return '\n'.join({player_name: partial_state for player_name, partial_state

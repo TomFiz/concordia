@@ -178,6 +178,8 @@ class InteractiveDocument(document.Document):
           max_tokens=max_tokens,
           terminators=terminators,
       )
+      # print(f'PROMPT : {self._model_view.text()}')
+      # print(f'{answer_label}: {response}')
     else:
       response = forced_response
     response = response.removeprefix(answer_prefix)

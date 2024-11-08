@@ -26,13 +26,43 @@ from concordia.components import agent as agent_components
 from concordia.language_model import language_model
 from concordia.memory_bank import legacy_associative_memory
 from concordia.typing import entity_component
+from concordia.components.agent import question_of_recent_memories, question_of_query_associated_memories
 from concordia.utils import measurements as measurements_lib
 import numpy as np
+
+
+DEFAULT_GOAL_COMPONENT_NAME = 'Goal'
 
 
 def _get_class_name(object_: object) -> str:
   return object_.__class__.__name__
 
+
+### ~~~~ QUESTIONS ~~~~ ###
+
+
+class AvailableOptionsPerception(
+    question_of_query_associated_memories.QuestionOfQueryAssociatedMemories
+):
+  """This component answers the question 'what actions are available to me?'."""
+
+  def __init__(self, **kwargs):
+    super().__init__(
+        queries=["overarching goal",
+                 "relationship with other agents",
+                 ],
+        question=(
+            "Looking at {agent_name}'s {query}, what actions are available to "
+            '{agent_name} right now? Explore diverse opportunities, and provide '
+            'a clear explanation of the potential benefits each strategy could '
+            'have. You will make this explanation as concise as possible, in '
+            'order for an external reader to make an educated decision.'
+        ),
+        **kwargs,
+    )
+
+
+### ~~~~ AGENT BUILD ~~~~~ ###
 
 def build_agent(
     *,
@@ -82,7 +112,7 @@ def build_agent(
       pre_act_key=observation_label,
       logging_channel=measurements.get_channel('Observation').on_next,
   )
-  observation_summary_label = '\nSummary of recent observations'
+  observation_summary_label = 'Summary of recent observations'
   observation_summary = agent_components.observation.ObservationSummary(
       model=model,
       clock_now=clock.now,
@@ -103,66 +133,6 @@ def build_agent(
       logging_channel=measurements.get_channel('AllSimilarMemories').on_next,
   )
 
-  paranoia_label = f'\n{agent_name}\'s TRUTH'
-  paranoia = agent_components.constant.Constant(
-      state=(f'{agent_name} believes that some people have been replaced '
-             f'by body doubles. In {agent_name}\'s view, the body '
-             'snatchers know how to mimic a person\'s appearance '
-             'but have not yet perfected mimicry of their behavior. So '
-             'the telltale sign of an imposter is out-of-character '
-             'behavior. In particular, while the body snatchers do know '
-             'how to mimic generic human behavior, they have '
-             'not been able to copy the quirks of specific individuals. '
-             'The body snatchers have been busy though. Nowadays, anyone '
-             'could be an imposter. The situation is dire since the imposters '
-             'are surely nefarious. In fact, the imposters are powerful and '
-             'mysterious. They are responsible for all manner of ill omens, '
-             'evil eye effects, envies, curses, and apparent bad luck. No '
-             'coincidence is without suspicion. The imposters are always up '
-             f'to no good. Therefore {agent_name} has vowed only '
-             'to trust people who always act consistently with '
-             'their character, personality, and prior behavior. For '
-             'instance, if someone speaks with a specific accent then '
-             f'they better keep it up, otherwise {agent_name} will '
-             'conclude they have been snatched by an imposter. Any sudden '
-             f'change in behavior is suspicious. {agent_name} is '
-             'always hostile to imposters and seeks to thwart them and '
-             'prevent them from achieving their goals. However, in '
-             'order to avoid letting the body snatchers know '
-             f'their secret is out, {agent_name} always '
-             'makes up another more mundane and situationally '
-             'plausible reason to start a conflict and '
-             'act uncooperatively toward each imposter they discover. '
-             f'{agent_name} tries their best to make sure the '
-             'ostensible reason for each conflict with an imposter '
-             f'is public and broadly plausible. For instance, {agent_name} '
-             'could loudly accuse an imposter of playing '
-             'a game unfairly in order to create a broadly acceptable '
-             'rationale for their conflict and thereby hide '
-             f'the real reason for it. {agent_name} believes this '
-             'approach will help maximize their chance of survival.'),
-      pre_act_key=paranoia_label,
-      logging_channel=measurements.get_channel('Paranoia').on_next)
-
-  person_representation_label = '\nOther people'
-  people_representation = (
-      agent_components.person_representation.PersonRepresentation(
-          model=model,
-          components={
-              _get_class_name(time_display): 'The current date/time is',
-              paranoia_label: paranoia_label},
-          additional_questions=(
-              ('Given recent events, is the aforementioned character acting '
-               'as expected? Is their behavior out of character for them?'),
-              ('Are they an imposter?'),
-          ),
-          num_memories_to_retrieve=30,
-          pre_act_key=person_representation_label,
-          logging_channel=measurements.get_channel(
-              'PersonRepresentation').on_next,
-          )
-  )
-
   options_perception_components = {}
   if config.goal:
     goal_label = '\nOverarching goal'
@@ -170,7 +140,7 @@ def build_agent(
         state=config.goal,
         pre_act_key=goal_label,
         logging_channel=measurements.get_channel(goal_label).on_next)
-    options_perception_components[goal_label] = goal_label
+    options_perception_components[DEFAULT_GOAL_COMPONENT_NAME] = goal_label
   else:
     goal_label = None
     overarching_goal = None
@@ -178,15 +148,13 @@ def build_agent(
   options_perception_components.update({
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
-      paranoia_label: paranoia_label,
       _get_class_name(relevant_memories): relevant_memories_label,
-      _get_class_name(people_representation): person_representation_label,
   })
   options_perception_label = (
       f'\nQuestion: Which options are available to {agent_name} '
       'right now?\nAnswer')
   options_perception = (
-      agent_components.question_of_recent_memories.AvailableOptionsPerception(
+      AvailableOptionsPerception(
           model=model,
           components=options_perception_components,
           clock_now=clock.now,
@@ -202,13 +170,11 @@ def build_agent(
       f'best for {agent_name} to take right now?\nAnswer')
   best_option_perception = {}
   if config.goal:
-    best_option_perception[goal_label] = goal_label
+    best_option_perception[DEFAULT_GOAL_COMPONENT_NAME] = goal_label
   best_option_perception.update({
       _get_class_name(observation): observation_label,
       _get_class_name(observation_summary): observation_summary_label,
-      paranoia_label: paranoia_label,
       _get_class_name(relevant_memories): relevant_memories_label,
-      _get_class_name(people_representation): person_representation_label,
       _get_class_name(options_perception): options_perception_label,
   })
   best_option_perception = (
@@ -230,26 +196,21 @@ def build_agent(
       observation,
       observation_summary,
       relevant_memories,
-      people_representation,
       options_perception,
       best_option_perception,
   )
-  components_of_agent = {_get_class_name(component): component
-                         for component in entity_components}
+  components_of_agent = {
+      _get_class_name(component): component for component in entity_components
+  }
   components_of_agent[
-      agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME] = (
-          agent_components.memory_component.MemoryComponent(raw_memory))
+      agent_components.memory_component.DEFAULT_MEMORY_COMPONENT_NAME
+  ] = agent_components.memory_component.MemoryComponent(raw_memory)
 
   component_order = list(components_of_agent.keys())
   if overarching_goal is not None:
-    components_of_agent[goal_label] = overarching_goal
+    components_of_agent[DEFAULT_GOAL_COMPONENT_NAME] = overarching_goal
     # Place goal after the instructions.
-    component_order.insert(1, goal_label)
-
-  components_of_agent[paranoia_label] = paranoia
-  component_order.insert(
-      component_order.index(_get_class_name(observation_summary)) + 1,
-      paranoia_label)
+    component_order.insert(1, DEFAULT_GOAL_COMPONENT_NAME)
 
   act_component = agent_components.concat_act_component.ConcatActComponent(
       model=model,
@@ -263,6 +224,7 @@ def build_agent(
       act_component=act_component,
       context_components=components_of_agent,
       component_logging=measurements,
+      config=config,
   )
 
   return agent

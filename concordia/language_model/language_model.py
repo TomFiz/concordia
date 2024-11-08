@@ -20,7 +20,7 @@ from collections.abc import Collection, Mapping, Sequence
 from typing import Any
 
 DEFAULT_TEMPERATURE = 0.5
-DEFAULT_TERMINATORS = ()
+DEFAULT_TERMINATORS = ('\n',)
 DEFAULT_TIMEOUT_SECONDS = 60
 DEFAULT_MAX_TOKENS = 256
 

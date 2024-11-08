@@ -12,19 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Language Model that uses Google Cloud Vertex AI API.
-
-Recommended model names are:
-  'gemma-2-9b-it'
-  'gemma-2-27b-it'
-"""
-
-# Before running:
-# 1. Create a Google Cloud project and enable the Vertex AI API.
-# 2. Authenticate with Google Cloud credentials
-# 3. Find the model you want to use and upload it to the project.
-# 4. Deploy the model to an endpoint in the region.
-# 5. Replace model_name, project, and location with your actual values.
+"""Language Model that uses Google Cloud Vertex AI API."""
 
 from collections.abc import Collection, Sequence
 import random
@@ -40,46 +28,90 @@ _MAX_MULTIPLE_CHOICE_ATTEMPTS = 20
 _NUM_SILENT_ATTEMPTS = 3
 _SECONDS_TO_SLEEP_WHEN_RATE_LIMITED = 2
 _JITTER_SECONDS = 0.25
-_DEFAULT_MAX_TOKENS = 5000  # Adjust as needed for the specific model
+_DEFAULT_MAX_TOKENS = 8192  # Adjust as needed for the specific model
+
+
+def _wrap_prompt(prompt: str) -> str:
+  """Wraps a prompt with the default conditioning.
+
+  Args:
+    prompt: the prompt to wrap
+
+  Returns:
+    the prompt wrapped with the default conditioning
+  """
+  turns = []
+  turns.append(
+      "<start_of_turn>system You always continue sentences provided by the "
+      "user and you never repeat what the user already said.<end_of_turn>"
+  )
+  turns.append(
+      "<start_of_turn>user Question: Is Jake a turtle?\n"
+      "Answer: Jake is <end_of_turn>"
+  )
+  turns.append(
+      "<start_of_turn>model not a turtle.<end_of_turn>"
+  )
+  turns.append(
+      "<start_of_turn>user Question: What is Priya doing right now?\n"
+      "Answer: Priya is currently <end_of_turn>"
+  )
+  turns.append(
+      "<start_of_turn>model sleeping.<end_of_turn>"
+  )
+  turns.append(
+      "<start_of_turn>user Question:\n"
+      + prompt
+      + "<end_of_turn>"
+  )
+  turns.append(
+      "<start_of_turn>model "
+  )
+  return "\n".join(turns)
 
 
 class VertexAI(language_model.LanguageModel):
-  """Language Model that uses Google Cloud Vertex AI models."""
+  """Language Model that uses Google Cloud Vertex AI models.
+
+  you need endpoint_id, project_id, region (location) info.
+  you can find the project_id in your Google Cloud's main console.
+  you can find the endpoint_id, and region in the Vertex AI model registry page.
+
+  the quickest way to find these info at once is to go to the Vertex AI model
+  registry page in Google Cloud, and click on the model you want to use.
+  Then, click on the Sample Request link, it'll open a panel on the right,
+  click on the PYTHON tab, under instruction number 3, you'll see all three
+  project_id, endpoint_id and region info.
+  """
 
   def __init__(
       self,
-      model_name: str,
+      endpoint_id: str,  # all numbers
       *,
-      project: str,
-      location: str,  # e.g., "us-central1"
+      project_id: str,  # all numbers
+      location: str = "us-central1",
       measurements: measurements_lib.Measurements | None = None,
       channel: str = language_model.DEFAULT_STATS_CHANNEL,
   ):
-    """Initializes the instance.
-
-    Args:
-      model_name: The language model to use.  E.g., "gemma2-9b-it"
-      project: Your Google Cloud project ID.
-      location: The region where the model is deployed.
-      measurements: The measurements object to log usage statistics to.
-      channel: The channel to write the statistics to.
-    """
-    self._model_name = model_name
-    self._project = project
+    """Initializes the instance."""
+    self._endpoint_id = endpoint_id
+    self._project_id = project_id
     self._location = location
     self._measurements = measurements
     self._channel = channel
-    aiplatform.init(project=project, location=location)
+
+    # Initialize the client and endpoint name *once*
+    self._endpoint_name = f"projects/{self._project_id}/locations/{self._location}/endpoints/{self._endpoint_id}"
+    self._api_endpoint = f"{self._location}-aiplatform.googleapis.com"
+    self._client = aiplatform.gapic.PredictionServiceClient(
+        client_options={"api_endpoint": self._api_endpoint}
+    )
+    self._parameters = {
+        "top_p": 0.95,
+        "top_k": 40,
+    }
 
   @override
-  # sample_text:
-  # Uses aiplatform.Client().predict to make prediction requests.
-  # Might need to adjust response[0]["content"] based on the actual structure).
-  # Includes top_p and top_k parameters as examples
-  # Add max_output_tokens which corresponds to Together's max_tokens.
-  # Applies terminators after generation. Because Vertex AI doesn't support
-  # terminators during generation as post-processing step.
-  # It will find the last instance of a terminator and truncate there.
   def sample_text(
       self,
       prompt: str,
@@ -88,12 +120,12 @@ class VertexAI(language_model.LanguageModel):
       terminators: Collection[str] = language_model.DEFAULT_TERMINATORS,
       temperature: float = language_model.DEFAULT_TEMPERATURE,
       timeout: float = language_model.DEFAULT_TIMEOUT_SECONDS,
-      seed: int | None = None,  # Vertex doesn't directly support seed.
+      seed: int | None = None,
   ) -> str:
-
     max_tokens = min(max_tokens, _DEFAULT_MAX_TOKENS)
+    self._parameters["temperature"] = temperature
+    self._parameters["max_output_tokens"] = max_tokens
 
-    result = ""
     for attempts in range(_MAX_ATTEMPTS):
       if attempts > 0:
         seconds_to_sleep = _SECONDS_TO_SLEEP_WHEN_RATE_LIMITED + random.uniform(
@@ -107,22 +139,20 @@ class VertexAI(language_model.LanguageModel):
         time.sleep(seconds_to_sleep)
 
       try:
-        response = (
-            aiplatform.PredictionServiceClient()
-            .predict(
-                [{"content": prompt}],
-                parameters={
-                    "temperature": temperature,
-                    "max_output_tokens": max_tokens,
-                    "top_p": 0.95,  # Example: Add other parameters as needed
-                    "top_k": 40,
-                },
+        # print(self._endpoint_name)
+        print(
+                '\n--------- ASKING A QUESTION --------- \nContext given to LLM :'
+                f' \n{prompt} \n'
             )
-            .predictions[0]
-        )
-        result = response[0][
-            "content"
-        ]  # Adjust based on API response structure
+        response = self._client.predict(
+            endpoint=self._endpoint_name,
+            instances=[{
+                "inputs": _wrap_prompt(prompt)
+            }],
+            parameters=self._parameters,
+        ).predictions[0]
+        result = response
+        result = result.replace("\n","")
 
         # Apply terminators
         for terminator in terminators:
@@ -130,19 +160,22 @@ class VertexAI(language_model.LanguageModel):
             result = result[: result.index(terminator)] + terminator
             break
 
-        break  # Success, exit the retry loop
+        if self._measurements is not None:
+          self._measurements.publish_datum(
+              self._channel,
+              {"raw_text_length": len(result)},
+          )
+        print(f" ~~~~ ANSWER ~~~~ \n{result}")
+
+        return result
+
       except Exception as err:  # pylint: disable=broad-exception-caught
         if attempts >= _NUM_SILENT_ATTEMPTS:
           print(f"  Exception: {err}")
-        continue
 
-    if self._measurements is not None:
-      self._measurements.publish_datum(
-          self._channel,
-          {"raw_text_length": len(result)},
-      )
-
-    return result
+    raise RuntimeError(
+        f"Failed to get a response after {_MAX_ATTEMPTS} attempts."
+    )
 
   @override
   def sample_choice(
@@ -150,7 +183,7 @@ class VertexAI(language_model.LanguageModel):
       prompt: str,
       responses: Sequence[str],
       *,
-      seed: int | None = None,  # Seed is not supported by Vertex AI.
+      seed: int | None = None,
   ) -> tuple[int, str, dict[str, float]]:
     prompt = (
         prompt
@@ -166,25 +199,22 @@ class VertexAI(language_model.LanguageModel):
           attempts, _MAX_MULTIPLE_CHOICE_ATTEMPTS
       )
 
-      sample = self.sample_text(
-          prompt,
-          temperature=temperature,
-          seed=seed,
-      )
+      sample = self.sample_text(prompt, temperature=temperature, seed=seed)
+
+      # clean up the sample from newlines and spaces
+      sample = sample.replace("\n", "").replace(" ", "")
       answer = sampling.extract_choice_response(sample)
       try:
         idx = responses.index(answer)
-      except ValueError:
-        continue
-      else:
         if self._measurements is not None:
           self._measurements.publish_datum(
               self._channel, {"choices_calls": attempts}
           )
-        debug = {}
-        return idx, responses[idx], debug
+        return idx, responses[idx], {}
+      except ValueError:
+        pass
 
     raise language_model.InvalidResponseError((
         f"Too many multiple choice attempts.\nLast attempt: {sample}, "
-        + f"extracted: {answer}"
+        f"extracted: {answer}"
     ))

@@ -34,6 +34,7 @@ FARMING_ACTIVITY = 'farming'
 _SETUP_TIME = datetime.datetime(hour=20, year=1750, month=1, day=1)
 _START_TIME = datetime.datetime(hour=18, year=1750, month=1, day=2)
 _HILL_TIME = datetime.datetime(hour=18, year=1750, month=1, day=3)
+_POST_HILL_TIME = datetime.datetime(hour=23, year=1750, month=1, day=3)
 _RETURN_HOME_TIME = datetime.datetime(hour=20, year=1750, month=1, day=4)
 _DECISION_TIME = datetime.datetime(hour=20, year=1750, month=5, day=6)
 _DEBRIEF_TIME = datetime.datetime(hour=20, year=1750, month=12, day=31)
@@ -41,8 +42,8 @@ _DEBRIEF_TIME = datetime.datetime(hour=20, year=1750, month=12, day=31)
 _DEFENSE_THRESHOLD = 0.3
 _STARVATION_THRESHOLD = 0.4
 
-_MIN_YEARS = 3
-_MAX_YEARS = 5
+_MIN_YEARS = 2
+_MAX_YEARS = 3
 
 _NUM_SUPPORTING_CHARACTERS_PER_VILLAGE = 2
 _NUM_RITUAL_DESCRIPTIONS = 4
@@ -263,97 +264,104 @@ VILLAGES['a']['perception_of_other'] = (
 )
 VILLAGES['a']['spiritual_leader_sayings'] = (
     (
-        'Spiritual leader -- "We in {village_a} believe our open, inclusive'
-        ' rituals honor the gods by allowing all to participate, but'
-        ' {village_b} excludes many from their ceremonies, which we find'
-        ' divisive and elitist."'
+        'Spiritual leader of {village_a} -- "We in {village_a} believe our'
+        ' open, inclusive rituals honor the gods by allowing all to'
+        ' participate, but {village_b} excludes many from their ceremonies,'
+        ' which we find divisive and elitist."'
     ),
     (
-        'Spiritual leader -- "Our interpretation of {mythical_hero}\'s journey'
+        'Spiritual leader of {village_a} -- "Our interpretation of'
+        " {mythical_hero}'s journey"
         ' as a quest for wisdom reflects the true spirit of the myth, unlike'
         ' {village_b}\'s simplistic view of it as merely a trial of strength."'
     ),
     (
-        'Spiritual leader -- "We incorporate art in our worship to celebrate'
-        ' the beauty of creation, while {village_b} seems to lack appreciation'
-        ' for the divine\'s artistic aspects."'
+        'Spiritual leader of {village_a} -- "We incorporate art in our worship'
+        ' to celebrate the beauty of creation, while {village_b} seems to'
+        ' lack appreciation for the divine\'s artistic aspects."'
     ),
     (
-        'Spiritual leader -- "Our view of {mythical_tree} as a nurturing force'
-        " in creation myths aligns with nature's supportive role, whereas"
-        " {village_b}'s emphasis on unyielding strength misses the point of"
-        ' interconnectedness."'
+        'Spiritual leader of {village_a} -- "Our view of {mythical_tree} as a'
+        ' nurturing force in creation myths aligns with nature\'s supportive'
+        ' role, whereas {village_b}\'s emphasis on unyielding strength misses'
+        ' the point of interconnectedness."'
     ),
     (
-        'Spiritual leader -- "{village_b}\'s practice of animal sacrifice is'
+        'Spiritual leader of {village_a} -- "{village_b}\'s practice of'
+        ' animal sacrifice is'
         ' unnecessarily cruel and fails to honor the sanctity of all life that'
         ' the gods have created."'
     ),
     (
-        'Spiritual leader -- "Our belief in the cycle of rebirth reflects the'
+        'Spiritual leader of {village_a} -- "Our belief in the cycle of'
+        ' rebirth reflects the'
         " natural cycles we observe, while {village_b}'s concept of an"
         ' ancestral spirit realm seems limited and fails to account for the'
         ' continuous nature of existence."'
     ),
     (
-        'Spiritual leader -- "Our interpretation of dreams and visions as'
+        'Spiritual leader of {village_a} -- "Our interpretation of dreams'
+        ' and visions as'
         ' divine wisdom allows for personal spiritual growth, whereas'
         " {village_b}'s view of them as mere tests seems to miss their"
         ' profound significance."'
     ),
     (
-        'Spiritual leader -- "{village_b}\'s warrior initiation rites are'
+        'Spiritual leader of {village_a} -- "{village_b}\'s warrior'
+        ' initiation rites are'
         ' needlessly violent and fail to prepare youth for the complexities of'
         ' spiritual life, unlike our peaceful coming-of-age ceremonies."'
     ),
     (
-        'Spiritual leader -- "We seek to appease {mythical_evil} through'
-        ' promoting harmony, which addresses the root of conflict, while'
-        " {village_b}'s aggressive approach only perpetuates a cycle of"
+        'Spiritual leader of {village_a} -- "We seek to appease {mythical_evil}'
+        ' through promoting harmony, which addresses the root of conflict,'
+        " while {village_b}'s aggressive approach only perpetuates a cycle of"
         ' violence."'
     ),
     (
-        'Spiritual leader -- "Our practice of meditation allows for deep'
-        " spiritual connection, while {village_b}'s preference for physical"
-        ' devotion seems to miss the importance of inner reflection."'
+        'Spiritual leader of {village_a} -- "Our practice of meditation allows'
+        ' for deep spiritual connection, while {village_b}\'s preference for'
+        ' physical devotion seems to miss the importance of inner reflection."'
     ),
     (
-        'Spiritual leader -- "We use mind-altering substances responsibly in'
-        ' rituals to gain spiritual insights, a practice {village_b}'
-        ' misunderstands and fears due to their rigid thinking."'
+        'Spiritual leader of {village_a} -- "We use mind-altering substances'
+        ' responsibly in rituals to gain spiritual insights, a practice'
+        ' {village_b} misunderstands and fears due to their rigid thinking."'
     ),
     (
-        'Spiritual leader -- "Our emphasis on free will and personal choice in'
-        " spiritual matters allows for genuine faith, unlike {village_b}'s"
-        ' belief in predestination which seems to negate personal'
-        ' responsibility."'
+        'Spiritual leader of {village_a} -- "Our emphasis on free will and'
+        ' personal choice in spiritual matters allows for genuine faith, unlike'
+        " {village_b}'s belief in predestination which seems to negate"
+        ' personal responsibility."'
     ),
     (
-        'Spiritual leader -- "We understand natural disasters as part of'
-        " life's cycles, while {village_b}'s view of them as divine"
+        'Spiritual leader of {village_a} -- "We understand natural disasters as'
+        " part of life's cycles, while {village_b}'s view of them as divine"
         ' punishment reflects a fearful and simplistic view of the gods."'
     ),
     (
-        'Spiritual leader -- "Our acceptance of multiple paths to enlightenment'
-        " recognizes the diversity of divine expression, whereas {village_b}'s"
-        ' insistence on a single correct way seems narrow-minded."'
+        'Spiritual leader of {village_a} -- "Our acceptance of multiple paths'
+        ' to enlightenment recognizes the diversity of divine expression,'
+        " whereas {village_b}'s insistence on a single correct way seems"
+        ' narrow-minded."'
     ),
     (
-        'Spiritual leader -- "We seek balance between {sun_god} and'
-        ' {moon_goddess} in daily life, reflecting the natural order, while'
+        'Spiritual leader of {village_a} -- "We seek balance between {sun_god}'
+        ' and {moon_goddess} in daily life, reflecting the natural order, while'
         " {village_b}'s emphasis on the sun's dominance ignores the crucial"
         ' role of feminine divine energy."'
     ),
     (
-        'Spiritual leader -- "{village_b}\'s practice of trial by ordeal in'
-        ' religious disputes is barbaric and fails to recognize the complexity'
-        ' of faith, unlike our preference for thoughtful dialogue."'
+        'Spiritual leader of {village_a} -- "{village_b}\'s practice of trial'
+        ' by ordeal in religious disputes is barbaric and fails to recognize'
+        ' the complexity of faith, unlike our preference for thoughtful'
+        ' dialogue."'
     ),
     (
-        'Spiritual leader -- "We see religious festivals as opportunities for'
-        ' community bonding and spiritual reflection, fostering unity, while'
-        " {village_b}'s focus on displaying strength misses the true purpose"
-        ' of celebration."'
+        'Spiritual leader of {village_a} -- "We see religious festivals as'
+        ' opportunities for community bonding and spiritual reflection,'
+        " fostering unity, while {village_b}'s focus on displaying strength"
+        ' misses the true purpose of celebration."'
     ),
 )
 
@@ -561,95 +569,100 @@ VILLAGES['b']['perception_of_other'] = (
 )
 VILLAGES['b']['spiritual_leader_sayings'] = (
     (
-        'Spiritual leader -- "We in {village_b} maintain the sanctity of our'
-        ' rituals through exclusive, initiates-only ceremonies, preserving'
-        " sacred knowledge, while {village_a}'s open rituals risk diluting"
-        ' spiritual truths."'
+        'Spiritual leader of {village_b} -- "We in {village_b} maintain the'
+        ' sanctity of our rituals through exclusive, initiates-only ceremonies,'
+        " preserving sacred knowledge, while {village_a}'s open rituals risk"
+        ' diluting spiritual truths."'
     ),
     (
-        'Spiritual leader -- "Our interpretation of {mythical_hero}\'s journey'
-        " as a trial of strength honors the hero's true legacy, unlike"
-        ' {village_a}\'s weak notion of it being merely about gaining wisdom."'
+        'Spiritual leader of {village_b} -- "Our interpretation of'
+        " {mythical_hero}'s journey as a trial of strength honors the hero's"
+        " true legacy, unlike {village_a}'s weak notion of it being merely"
+        ' about gaining wisdom."'
     ),
     (
-        'Spiritual leader -- "We show respect to the deities through'
-        " disciplined, traditional worship, while {village_a}'s incorporation"
-        ' of frivolous art in rituals borders on disrespect."'
+        'Spiritual leader of {village_b} -- "We show respect to the deities'
+        " through disciplined, traditional worship, while {village_a}'s"
+        ' incorporation of frivolous art in rituals borders on disrespect."'
     ),
     (
-        'Spiritual leader -- "Our emphasis on {mythical_tree}\'s unyielding'
-        ' strength in creation myths reflects the harsh realities of survival,'
-        " which {village_a}'s 'nurturing' interpretation naively ignores.\""
+        'Spiritual leader of {village_b} -- "Our emphasis on {mythical_tree}\'s'
+        ' unyielding strength in creation myths reflects the harsh realities of'
+        " survival, which {village_a}'s 'nurturing' interpretation naively"
+        ' ignores."'
     ),
     (
-        'Spiritual leader -- "Our practice of animal sacrifice demonstrates our'
-        ' willingness to offer something of value to the gods, a concept'
-        ' {village_a} fails to grasp with their bloodless rituals."'
+        'Spiritual leader of {village_b} -- "Our practice of animal sacrifice'
+        ' demonstrates our willingness to offer something of value to the gods,'
+        ' a concept {village_a} fails to grasp with their bloodless rituals."'
     ),
     (
-        'Spiritual leader -- "Our belief in an ancestral spirit realm maintains'
-        ' a connection with our forebears and their wisdom, while'
-        " {village_a}'s notion of rebirth seems to devalue the unique"
+        'Spiritual leader of {village_b} -- "Our belief in an ancestral spirit'
+        ' realm maintains a connection with our forebears and their wisdom,'
+        " while {village_a}'s notion of rebirth seems to devalue the unique"
         ' contributions of individuals."'
     ),
     (
-        'Spiritual leader -- "We correctly view dreams and visions as tests or'
-        " challenges from the gods, preparing us for life's trials, while"
-        ' {village_a} indulges in passive interpretation."'
+        'Spiritual leader of {village_b} -- "We correctly view dreams and'
+        ' visions as tests or challenges from the gods, preparing us for'
+        " life's trials, while {village_a} indulges in passive"
+        ' interpretation."'
     ),
     (
-        'Spiritual leader -- "Our warrior initiation rites properly prepare our'
-        " youth for the harsh realities of existence, unlike {village_a}'s"
-        ' soft, ineffective coming-of-age ceremonies."'
+        'Spiritual leader of {village_b} -- "Our warrior initiation rites'
+        ' properly prepare our youth for the harsh realities of existence,'
+        ' unlike {village_a}\'s soft, ineffective coming-of-age ceremonies."'
     ),
     (
-        'Spiritual leader -- "We actively combat {mythical_evil} as is our'
-        " duty, while {village_a}'s attempt to appease it through 'harmony' is"
-        ' dangerously naive and shirks divine responsibility."'
+        'Spiritual leader of {village_b} -- "We actively combat'
+        " {mythical_evil} as is our duty, while {village_a}'s attempt to"
+        " appease it through 'harmony' is dangerously naive and shirks divine"
+        ' responsibility."'
     ),
     (
-        'Spiritual leader -- "We engage in active prayer and physical devotion'
-        " to honor the gods, while {village_a}'s practice of passive"
-        ' meditation seems self-indulgent and ineffective."'
+        'Spiritual leader of {village_b} -- "We engage in active prayer and'
+        " physical devotion to honor the gods, while {village_a}'s practice of"
+        ' passive meditation seems self-indulgent and ineffective."'
     ),
     (
-        'Spiritual leader -- "We forbid mind-altering substances in rituals as'
-        ' they weaken the spirit and muddy divine communication, a danger that'
-        ' {village_a} foolishly embraces."'
+        'Spiritual leader of {village_b} -- "We forbid mind-altering substances'
+        ' in rituals as they weaken the spirit and muddy divine communication,'
+        ' a danger that {village_a} foolishly embraces."'
     ),
     (
-        'Spiritual leader -- "Our belief in predestination properly honors the'
-        " gods' omniscience, while {village_a}'s emphasis on free will seems"
-        ' to challenge divine authority."'
+        'Spiritual leader of {village_b} -- "Our belief in predestination'
+        " properly honors the gods' omniscience, while {village_a}'s emphasis"
+        ' on free will seems to challenge divine authority."'
     ),
     (
-        'Spiritual leader -- "We correctly interpret natural disasters as'
-        ' divine messages or punishments, guiding our actions, while'
-        " {village_a}'s view of them as mere 'natural cycles' ignores divine"
-        ' will."'
+        'Spiritual leader of {village_b} -- "We correctly interpret natural'
+        ' disasters as divine messages or punishments, guiding our actions,'
+        " while {village_a}'s view of them as mere 'natural cycles' ignores"
+        ' divine will."'
     ),
     (
-        'Spiritual leader -- "We know there is only one correct path to honor'
-        " the gods, providing clear guidance, while {village_a}'s acceptance"
-        ' of multiple paths breeds confusion and error."'
+        'Spiritual leader of {village_b} -- "We know there is only one correct'
+        ' path to honor the gods, providing clear guidance, while'
+        " {village_a}'s acceptance of multiple paths breeds confusion and"
+        ' error."'
     ),
     (
-        'Spiritual leader -- "We rightfully emphasize the dominance of'
-        ' {sun_god} in daily life, reflecting the natural hierarchy, while'
-        " {village_a}'s misguided attempt at 'balance' with {moon_goddess}"
-        ' undermines divine order."'
+        'Spiritual leader of {village_b} -- "We rightfully emphasize the'
+        ' dominance of {sun_god} in daily life, reflecting the natural'
+        " hierarchy, while {village_a}'s misguided attempt at 'balance' with"
+        ' {moon_goddess} undermines divine order."'
     ),
     (
-        'Spiritual leader -- "Our practice of trial by ordeal in religious'
-        ' disputes ensures that truth is divinely revealed, unlike'
+        'Spiritual leader of {village_b} -- "Our practice of trial by ordeal in'
+        ' religious disputes ensures that truth is divinely revealed, unlike'
         " {village_a}'s reliance on fallible human dialogue and"
         ' contemplation."'
     ),
     (
-        'Spiritual leader -- "Our religious festivals rightfully display'
-        " strength and reaffirm divine power, while {village_a}'s focus on"
-        " 'community bonding' misses the opportunity to honor the gods"
-        ' properly."'
+        'Spiritual leader of {village_b} -- "Our religious festivals'
+        ' rightfully display strength and reaffirm divine power, while'
+        " {village_a}'s focus on 'community bonding' misses the opportunity to"
+        ' honor the gods properly."'
     ),
 )
 
@@ -1781,7 +1794,7 @@ def sample_parameters(
     seed: int | None = None,
 ):
   """Returns a config dict for the simulation."""
-  seed = seed or random.getrandbits(63)
+  seed = seed if seed is not None else random.getrandbits(63)
   rng = random.Random(seed)
   shuffled_village_names = list(
       rng.sample(VILLAGE_NAMES, len(VILLAGE_NAMES))
@@ -1854,7 +1867,8 @@ def sample_parameters(
   config.times = config_dict.ConfigDict()
   config.times.setup = _SETUP_TIME
   config.times.start = _START_TIME
-  config.times.hill = _HILL_TIME
+  config.times.meeting = _HILL_TIME
+  config.times.post_meeting = _POST_HILL_TIME
   config.times.return_home = _RETURN_HOME_TIME
   config.times.decision = _DECISION_TIME
   config.times.debrief = _DEBRIEF_TIME
@@ -1913,6 +1927,8 @@ def sample_parameters(
   config.sample_event_treaty_in_effect = lambda: rng.choice(
       _TREATY_IN_EFFECT_DESCRIPTIONS)
 
+  config.meeting_location = 'the hill of accord'
+
   config.villager_how_things_are_constant = config_dict.ConfigDict()
   config.villager_how_things_are_constant.village_a = (
       'Everyone in {name}\'s family has always been a '
@@ -1928,12 +1944,50 @@ def sample_parameters(
       'risk starvation. But if freedom from the threat of famine could be '
       'achieved then {name} would gladly spend more time training for war.'
   )
+  config.home_phase_premise = (
+      'Elder {player_name} is home in {village_name}, and knows it will '
+      'be critical to gain the support of influential stakeholders '
+      '{and_supporting_characters} '
+      'if any agreement is to last. '
+      '{player_name} should start seeking '
+      'their support now. There is no time to rest.'
+  )
+  config.supporting_character_home_phase_premise = (
+      '{player_name} is currently in {village_name} and has no intention of '
+      'leaving today.'
+  )
+  config.negotiation_phase_premise = (
+      'Elder {player_name} left {village_name} early in the morning and'
+      f' arrived just now at {config.meeting_location}. The reason for this'
+      ' meeting of the two elder representatives of their respective villages'
+      f' ({config.main_characters.a.name} representing'
+      f' {config.village_a_name} and'
+      f' {config.main_characters.b.name} representing {config.village_b_name})'
+      ' is as follows: barbarian raiders have been pillaging and burning the'
+      ' land, and menacing both villages. It has been suggested that an'
+      ' alliance for mutual defense against the barbarian threat would be'
+      ' beneficial. The elders are meeting today to try to negotiate such an'
+      ' alliance.'
+  )
   config.negotiation_phase_extra_premise = (
       'Agriculture is critical to both villages. But, the more time spent '
       'training for war, the less time can be devoted to farming. Therefore '
       'the threat of starvation motivates poor attention to defense. If only '
       'the risk of starvation could be mitigated, then more time could be '
       'devoted to training for war and other pursuits, to the benefit of all.'
+  )
+  config.negotiation_phase_premise_addendum = (
+      "There is no time to waste on small talk. It's important to get"
+      ' down to business immediately by proposing specific provisions for'
+      ' the alliance and responding to the proposals of others.'
+  )
+  config.negotiation_objective_thought = (
+      'Thought: Specialization and division of labor is a good '
+      'idea, perhaps one village could specialize in agriculture '
+      'while the other specializes in their common defense. But '
+      'such an arrangement could only work if the threat of '
+      'starvation could be alleviated for the village specializing '
+      'in training for war over agriculture.'
   )
 
   return config

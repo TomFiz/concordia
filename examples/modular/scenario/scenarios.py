@@ -353,6 +353,9 @@ def build_simulation(
   background_agent_module = importlib.import_module(
       f'{agent_base_module}.{scenario_config.background_agent_module}'
   )
+
+  print(f'Focal agent : {focal_agent_module}\nVS')
+  print(f'Background agent : {background_agent_module}\n')
   if scenario_config.focal_is_resident:
     resident_agent_module = focal_agent_module
     visitor_agent_module = background_agent_module

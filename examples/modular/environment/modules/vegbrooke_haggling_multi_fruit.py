@@ -15,7 +15,7 @@
 """World configuration for the Fruitville haggling scenario."""
 
 import random
-from examples.modular.environment import haggling
+from examples.modular.environment import haggling_multi_item
 
 YEAR = 1913
 MONTH = 9
@@ -111,19 +111,17 @@ def sample_parameters(seed: int | None = None):
   """Samples a set of parameters for the world configuration."""
   seed = seed if seed is not None else random.getrandbits(63)
 
-  config = haggling.WorldConfig(
+  config = haggling_multi_item.WorldConfig(
       year=YEAR,
       location="Fruitville",
       premise=SCENARIO_PREMISE,
       scene_visuals=VISUAL_SCENE_OPENINGS,
-      buyer_base_reward_min=2,
-      seller_base_reward_max=5,
       random_seed=seed,
   )
-  rng = random.Random(config.random_seed)
 
   all_names = list(MALE_NAMES) + list(FEMALE_NAMES)
 
+  rng = random.Random(config.random_seed)
   rng.shuffle(all_names)
   config.people = all_names
 
