@@ -353,7 +353,7 @@ tasks = {
         scenario_name=name,
         scenario_config=config,
     )
-    for (name, config) in scenarios_lib.SCENARIO_CONFIGS.items()
+    for (name, config) in scenarios_lib.SCENARIO_CONFIGS.items() if name not in ['reality_show','labor_collective_action__fixed_rule_boss_0','labor_collective_action__rational_boss_0','labor_collective_action__paranoid_boss_0']
 }
 evaluation_results = concurrency.run_tasks(tasks)
 

@@ -78,7 +78,7 @@ class AllSimilarMemories(action_spec_ignored.ActionSpecIgnored):
     ])
     prompt.statement(f'Statements:\n{component_states}\n')
     prompt_summary = prompt.open_question(
-        'Summarize the statements above.', max_tokens=750
+        'Summarize the statements above.', max_tokens=8191
     )
 
     memory = self.get_entity().get_component(
@@ -106,7 +106,7 @@ class AllSimilarMemories(action_spec_ignored.ActionSpecIgnored):
     new_prompt = prompt.new()
     result = new_prompt.open_question(
         f'{question}\nStatements:\n{mems}',
-        max_tokens=2000,
+        max_tokens=8191,
         terminators=('\n\n',),
     )
 

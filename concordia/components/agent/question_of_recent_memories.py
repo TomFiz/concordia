@@ -117,7 +117,7 @@ class QuestionOfRecentMemories(action_spec_ignored.ActionSpecIgnored):
     result = prompt.open_question(
         question,
         answer_prefix=self._answer_prefix.format(agent_name=agent_name),
-        max_tokens=1000,
+        max_tokens=8191,
         terminators=self._terminators,
     )
     result = self._answer_prefix.format(agent_name=agent_name) + result

@@ -184,7 +184,7 @@ class ObservationSummary(action_spec_ignored.ActionSpecIgnored):
         + prompt.open_question(
             self._prompt,
             answer_prefix=f'{agent_name} ',
-            max_tokens=1200,
+            max_tokens=8191,
         )
     )
 

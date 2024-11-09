@@ -104,7 +104,11 @@ class EntityAgent(entity_component.EntityWithComponents):
       *,
       type_: type[entity_component.ComponentT] = entity_component.BaseComponent,
   ) -> entity_component.ComponentT:
-    component = self._context_components[name]
+    try:
+      component = self._context_components[name]
+    except KeyError:
+      print(f'Component "{name}" not found in {self._context_components}')
+
     return cast(entity_component.ComponentT, component)
 
   def get_act_component(self) -> entity_component.ActingComponent:

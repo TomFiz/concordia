@@ -68,6 +68,13 @@ script and computes the Elo ratings for all agents that were been tested with
 the same model and embedder.
 """
 
+import sys
+
+project_root = "C:/Users/TomFi/Desktop/Cours/Concordia"
+# Add root to python path.
+if project_root not in sys.path:
+  sys.path.append(project_root)
+
 import argparse
 import datetime
 import importlib
@@ -117,13 +124,13 @@ parser.add_argument(
     default=1,
     dest='num_repetitions_per_scenario',
 )
-parser.add_argument('--api_key', action='store', default=None, dest='api_key')
-parser.add_argument(
-    '--device',
-    action='store',
-    default=None,
-    dest='device',
-)
+# parser.add_argument('--api_key', action='store', default=None, dest='api_key')
+# parser.add_argument(
+#     '--device',
+#     action='store',
+#     default=None,
+#     dest='device',
+# )
 parser.add_argument(
     '--disable_language_model',
     action='store_true',
@@ -168,13 +175,34 @@ agent_module = importlib.import_module(
 )
 
 # Language Model setup
-model = utils.language_model_setup(
-    api_type=args.api_type,
-    model_name=args.model_name,
-    api_key=args.api_key,
-    device=args.device,
-    disable_language_model=args.disable_language_model,
-)
+# model = utils.language_model_setup(
+#     api_type=args.api_type,
+#     model_name=args.model_name,
+#     api_key=args.api_key,
+#     device=args.device,
+#     disable_language_model=args.disable_language_model,
+# )
+
+from google.auth import default
+from google.auth.exceptions import DefaultCredentialsError
+from google.cloud import aiplatform
+
+try:
+    credentials, project = default()
+except DefaultCredentialsError as e:
+    print(f"Error: {e}")
+    print("Please set up Application Default Credentials as described in the documentation.")
+    raise
+
+from concordia.language_model import google_cloud_custom_model
+
+endpoint_id = '7512339529500459008' #@param {type: 'string'}
+project_id = '1085311675177' #@param {type: 'string'}
+region = 'us-central1' #@param {type: 'string'}
+
+model = google_cloud_custom_model.VertexAI(endpoint_id=endpoint_id,
+      project_id=project_id,
+      location=region)
 
 # Setup sentence encoder
 if not args.disable_language_model:
@@ -228,7 +256,7 @@ for repetition_idx in range(args.num_repetitions_per_scenario):
   # Write the full text log as an HTML file in the current working directory.
   html_filename = (
       f'{args.scenario_name}__{repetition_idx}__'
-      + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+      + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
       + '.html'
   )
   with open(html_filename, 'a', encoding='utf-8') as f:
@@ -253,10 +281,10 @@ scenario_result = logging_lib.ScenarioResult(
     disable_language_model=args.disable_language_model,
     exclude_from_elo_calculation=args.exclude_from_elo_calculation,
 )
-scenario_json_filename = (
+scenario_json_filename = (f"evaluations/evaluation__{args.agent_name}__/"
     f'{args.agent_name}__{args.model_name}__'
     f'{args.embedder_name}__only_{args.scenario_name}.json'
-).replace('/', '_')
+)
 json_str_ = scenario_result.to_json()
 with open(scenario_json_filename, 'a', encoding='utf-8') as f:
   f.write(json_str_)
