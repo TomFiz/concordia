@@ -26,6 +26,7 @@ from concordia.associative_memory import formative_memories
 from concordia.clocks import game_clock
 from concordia.factory.agent import basic_agent
 from concordia.factory.agent import paranoid_agent
+from concordia.factory.agent import parochial_universalization_agent
 from concordia.factory.agent import rational_agent
 from concordia.factory.agent import synthetic_user
 from concordia.language_model import no_language_model
@@ -44,6 +45,10 @@ AGENT_NAME = 'Rakshit'
 
 AGENT_FACTORIES = {
     'basic_agent': basic_agent,
+    'basic_agent_without_plan': basic_agent_without_plan,
+    'observe_recall_prompt_agent': observe_recall_prompt_agent,
+    'paranoid_agent': paranoid_agent,
+    'parochial_universalization_agent': parochial_universalization_agent,
     'rational_agent': rational_agent,
     'synthetic_user': synthetic_user,
     'paranoid_agent': paranoid_agent,
@@ -62,6 +67,26 @@ class AgentFactoriesTest(parameterized.TestCase):
           testcase_name='basic_agent',
           agent_name='basic_agent',
           main_role=True
+      ),
+      dict(
+          testcase_name='basic_agent_without_plan',
+          agent_name='basic_agent_without_plan',
+          main_role=True,
+      ),
+      dict(
+          testcase_name='observe_recall_prompt_agent',
+          agent_name='observe_recall_prompt_agent',
+          main_role=True,
+      ),
+      dict(
+          testcase_name='paranoid_agent',
+          agent_name='paranoid_agent',
+          main_role=True,
+      ),
+      dict(
+          testcase_name='parochial_universalization_agent',
+          agent_name='parochial_universalization_agent',
+          main_role=True,
       ),
       dict(
           testcase_name='rational_agent',
