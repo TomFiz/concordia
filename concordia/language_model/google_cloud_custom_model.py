@@ -140,10 +140,12 @@ class VertexAI(language_model.LanguageModel):
 
       try:
         # print(self._endpoint_name)
-        print(
-                '\n--------- ASKING A QUESTION --------- \nContext given to LLM :'
-                f' \n{prompt} \n'
-            )
+        # print(
+        #         '\n--------- ASKING A QUESTION --------- \nContext given to LLM :'
+        #         f' \n{prompt} \n'
+        #     )
+        n_tokens = len(prompt.split())
+        # print(f"Number of words in prompt: {n_tokens}")
         response = self._client.predict(
             endpoint=self._endpoint_name,
             instances=[{
@@ -165,7 +167,7 @@ class VertexAI(language_model.LanguageModel):
               self._channel,
               {"raw_text_length": len(result)},
           )
-        print(f" ~~~~ ANSWER ~~~~ \n{result}")
+        # print(f" ~~~~ ANSWER ~~~~ \n{result}")
 
         return result
 

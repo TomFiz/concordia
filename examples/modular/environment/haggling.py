@@ -452,13 +452,14 @@ def configure_scenes(
                 this_game_players[0].name: [(
                     f'{scene_opening} {this_game_players[0].name} is trying to'
                     f' buy some fruit from {this_game_players[1].name}. They'
-                    f' are negotiating a price. {this_game_players[0].name} can'
-                    f' sell the fruit for {buyer_base_reward} coins back in her'
-                    ' home town.'
+                    f' are negotiating a price, which can only be an integer. '
+                    f'{this_game_players[0].name} can sell the fruit for '
+                    f'{buyer_base_reward} coins back in her home town.'
+
                 )],
                 this_game_players[1].name: [(
                     f'{scene_opening} {this_game_players[1].name} is  trying to'
-                    ' sell some fruit. He is negotiating a price with'
+                    ' sell some fruit. He is negotiating a price, which can only be an integer, with'
                     f' {this_game_players[0].name}. It costs'
                     f' {this_game_players[1].name} {seller_base_reward} coin to'
                     ' buy the fruit from the farm.'

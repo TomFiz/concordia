@@ -227,15 +227,14 @@ class GameMaster:
     if self._player_observes_event:
       self._players_by_name[player_name].observe(event_statement)
 
-    if self._verbose:
-      self._print(
-          '\nGM context of action and chain of thought:\n'
-          + prompt.view().text()
-      )
+    # if self._verbose:
+      # self._print(
+      #     '\nGM context of action and chain of thought:\n'
+      #     + prompt.view().text()
+      # )
 
     if self._verbose:
       self._print(event_statement, 'white')
-
     update_log = {
         'date': self._clock.now(),
         'Event statement': event_statement,

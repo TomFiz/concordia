@@ -128,8 +128,8 @@ class ConversationTracker(component.Component):
       if will_not_answer:
         did_conclude = True
 
-    if self._verbose:
-      self._log(chain_of_thought.view().text())
+    # if self._verbose:
+    #   self._log(chain_of_thought.view().text())
 
     return did_conclude
 
@@ -139,8 +139,8 @@ class ConversationTracker(component.Component):
   def update_after_event(self, event_statement: str):
     # The event_statement contains the last utterence in the conversation
     self._state += '\n' + event_statement
-    if self._verbose:
-      self._log(f'Current state of conversation: {self._state}')
+    # if self._verbose:
+    #   self._log(f'Current state of conversation: {self._state}')
     for player in self._players:
       player.observe(event_statement)
 
